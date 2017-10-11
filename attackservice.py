@@ -2,12 +2,26 @@ from flask import Flask, request, send_file, jsonify
 from flask_restplus import Resource, Api, reqparse, fields
 from flask_cors import CORS
 
-#import celery
-
 import time
 import os
 import json
 from werkzeug.exceptions import BadRequest
+
+from celery import Celery
+
+def make_celery(app):
+    celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'],
+                    broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+    TaskBase = celery.Task
+    class ContextTask(TaskBase):
+        abstract = True
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return TaskBase.__call__(self, *args, **kwargs)
+    celery.Task = ContextTask
+    return celery
+
 
 
 def create_app():
@@ -27,7 +41,6 @@ def create_app():
         'duration': fields.Integer(required=True, description='Duration'),
         'frequency': fields.Integer(required=True, description='Frequency')
     })
-
 
 
     @ns.route('/attack/<string:address>')
@@ -54,4 +67,5 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
+    
     app.run(debug=True)
