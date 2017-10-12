@@ -35,11 +35,9 @@ def create_app():
     ns = api.namespace('TimeAttack', description='Timing attack operations')
 
     params = api.model('Params', {
-        'xpos': fields.Integer(readOnly=True, description='X-position'),
-        'ypos': fields.Integer(required=True, description='Y-position'),
-        'samplerate': fields.Integer(required=True, description='Samplerate'),
-        'duration': fields.Integer(required=True, description='Duration'),
-        'frequency': fields.Integer(required=True, description='Frequency')
+        'address': fields.Integer(readOnly=True, description='Attack target address'),
+        'digits': fields.Integer(required=True, description='Number of digits in the password to be brute forced'),
+        'resultname': fields.Integer(required=False, description='Result filename (optional)')
     })
 
 
@@ -67,5 +65,5 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    
+
     app.run(debug=True)
