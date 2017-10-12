@@ -31,7 +31,7 @@ def create_app():
     api = Api(app)
 
     parser = reqparse.RequestParser()
-    parser.add_argument('adrress', action='append', type=str, help='Target address')
+    parser.add_argument('resultid', action='append', type=str, help='ID of the result')
     ns = api.namespace('TimeAttack', description='Timing attack operations')
 
     params = api.model('Params', {
@@ -41,10 +41,10 @@ def create_app():
     })
 
 
-    @ns.route('/attack/<string:address>')
+    @ns.route('/attack')
     class Attacks(Resource):
         """ This endpoint initiates an attack """
-        @ns.doc('post measurement parameters')
+        @ns.doc('post attack parameters and initiate attack')
         @ns.expect(params)
         @ns.marshal_with(params)
         def post(self):
@@ -55,10 +55,18 @@ def create_app():
     @ns.route('/results')
     class Results(Resource):
         """ This endpoint returns results """
-        @ns.doc('get a graph html')
+        @ns.doc('fetch results')
         def get(self):
             #return the correct result
-            return(html)
+            return('results')
+
+    @ns.route('/results/<string:resultid>')
+    class Result(Resource):
+        """ This endpoint returns a single result """
+        @ns.doc('fetch a single result')
+        def get(self):
+            #return the correct result
+            return('result')
 
     return app
 
