@@ -27,7 +27,7 @@ def create_app():
 
     parser = reqparse.RequestParser()
     parser.add_argument('resultid', action='append', type=str, help='ID of the result')
-    ns = api.namespace('TimeAttack', description='Timing attack operations')
+    ns = api.namespace('Login', description='Very legit login service')
 
     params = api.model('Params', {
         'password': fields.String(required=True, description='Password'),
@@ -44,10 +44,9 @@ def create_app():
         def post(self):
             data = api.payload
             print(data)
-            address = data['address']
-            digits = data['digits']
-            username = data['username']
-            resultname = primary_attack(address, digits, username)
+            username_try = data['password']
+            password_try = data['username']
+            login_result = login_comparison(username_try, password_try)
             return(resultname)
 
     return app

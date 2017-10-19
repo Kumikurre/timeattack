@@ -8,26 +8,24 @@ thestring = "aaaa"
 corrects = []
 falses = []
 
-for x in range(10):
+for x in range(1000000):
     start = time.perf_counter()
     if correct == thestring:
         pass
     end = time.perf_counter()
-    print(end-start)
     corrects.append(end-start)
 
-print("\n")
-
-for y in range(10):
+for y in range(1000000):
     start = time.perf_counter()
     if incorrect == thestring:
         pass
     end = time.perf_counter()
-    print(end-start)
     falses.append(end-start)
 
 print("\n")
-print("\n")
-
+print('correct comparison:')
 print(np.mean(corrects))
+print(np.amin(corrects))
+print('false comparison:')
 print(np.mean(falses))
+print(np.amax(falses))
