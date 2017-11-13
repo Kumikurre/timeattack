@@ -6,8 +6,6 @@ import numpy as np
 
 from werkzeug.exceptions import BadRequest
 
-#from celery import Celery
-
 import time
 import os
 import json
@@ -56,24 +54,6 @@ def check_vulnerable(timings):
     print('correct password was {0:.4f} ms faster'.format(float(mean - corr_time[0])*1000))
     return(mean, corr_passw)
 
-"""
-def precise_test(address, correct_passw, username):
-    times = []
-    results = []
-    for x in range(10):
-        passw = correct_passw
-        for idx, char in reversed(list(enumerate(passw))):
-            start = time.perf_counter()
-            req = requests.post(address, data={'username':username, 'password':passw})
-            end = time.perf_counter()
-            times.append(end-start)
-            print(idx)
-            print(char)
-            passw[idx] = chr((ord(passw[idx]))+1)
-        results.append(times)
-        times = []
-    return(results)
-"""
 
 
 def create_app():
