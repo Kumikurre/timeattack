@@ -55,6 +55,11 @@ def check_vulnerable(timings):
     return(mean, corr_passw)
 
 
+def check_thoroughly(timings, corr_passw):
+    #this function should take the correct PW as an input and then mutate with successive iterations
+    #with the correct password and its mutations it should time the difference and then return the results
+    return('results')
+
 
 def create_app():
     app = Flask(__name__)
@@ -89,10 +94,10 @@ def create_app():
                 timings = primary_attack(address, digits, username)
                 res, correct_passw = check_vulnerable(timings)
                 test.append(res)
-            print(np.mean(test))
-            print('Results: correct password is {0:.4f} ms faster than average of all results'.format(float(np.mean(test))))
+            #print(np.mean(test))
+            #print('Results: correct password is {0:.4f} ms faster than average of all results'.format(float(np.mean(test))))
             prec = precise_test(address, correct_passw, username)
-            print(prec)
+            #print(prec)
             return(np.mean(test))
 
 
